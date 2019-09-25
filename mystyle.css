@@ -1,0 +1,66 @@
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background-color: lightgray;
+  margin: 0;
+}
+.banner {
+  height: 182px;
+  width: 100%;
+  position: absolute;
+  background: url(Images/Banner_White.jpg);
+  background-size: 100% 182px;
+}
+.logo {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  position: relative;
+}
+#logoimg {
+  height: 180px;
+  width: 180px;
+  display: block;
+  margin: auto;
+}
+.navbar {
+  padding-top: 182px
+}
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #006400;
+  font-family: "Calibri Light";
+  font-size: 18px;
+}
+
+li {
+  float: left;
+}
+
+li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+li a:hover:not(.active) {
+  background-color: #004200;
+}
+
+.active {
+  background-color: #004200;
+}
+h1 {
+  font-family: "Calibri Light";
+  color: #006400;
+}
+p {
+  font-family: "Calibri Light";
+  font-size: 20px;
+}
