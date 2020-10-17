@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>M. Nords Aviation Website</title>
+  <link rel="stylesheet" href="stylesheet.css">
+</head>
+<body>
+  <div class="frontLogo">
+    <img src="nordAviationLogo.png" alt="Oops something went wrong"/>
+  </div>
+  <div class="buttonDiv">
+    <button class="button" onclick="showhide('webcamDiv');">WEBCAMS</button>
+    <button class="button" onclick="showhide('weatherDiv');">WEATHER</button>
+    <button class="button">MAP (wip)</button>
+    <a href="https://www.liveatc.net/hlisten.php?mount=enrk&icao=enrk" target="_blank"><button class="button">ATC</button></a>
+    <a href="https://www.ippc.no/ippc/index.jsp" target="_blank"><button class="button">IPPC</button></a>
+    <a href="https://www.myppr.no/aerodrome/enrk" target="_blank"><button class="button">MYPPR</button></a>
+    <button class="button" onclick="showhide('e6bxDiv');">E6BX</button>
+  </div>
+  <div id="content">
+    <div class="webcamDiv" id="webcamDiv">
+      <img class="myImages" id="myImg" src="https://enrk.net/webcam/southeast000M.jpg" alt="ENRK Southeast" width="384" height="216">
+      <img class="myImages" id="myImg" src="https://enrk.net/webcam/northeast000M.jpg" alt="ENRK Northeast"
+      width="384" height="216">
+      <div id="myModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="img01">
+        <div id="caption"></div>
+      </div>
+    </div>
+    <div class="weatherDiv" id="weatherDiv">
+      <iframe src="https://www.yr.no/place/Norway/Viken/Rakkestad/Rakkestad_flyplass,_%C3%85storp/long.html" id="myFrame" scrolling="no"></iframe>
+    </div>
+    <div class="e6bxDiv" id="e6bxDiv">
+      <iframe src="https://e6bx.com/weather/ENRY/?hoursBeforeNow=0&includeTaf=1&showDecoded=1" id="myFrame2"></iframe>
+    </div>
+  </div>
+  <script>
+  var modal = document.getElementById('myModal');
+  var images = document.getElementsByClassName('myImages');
+  var modalImg = document.getElementById("img01");
+  var captionText = document.getElementById("caption");
+
+  for (var i = 0; i < images.length; i++) {
+    var img = images[i];
+    img.onclick = function(evt) {
+      modal.style.display = "block";
+      modalImg.src = this.src;
+      captionText.innerHTML = this.alt;
+    }
+  }
+
+  var span = document.getElementsByClassName("close")[0];
+
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+
+  var divState = {};
+  function showhide(id) {
+    if (document.getElementById) {
+      var divid = document.getElementById(id);
+      divState[id] = (divState[id]) ? false : true;
+
+      for (var div in divState){
+        if (divState[div] && div != id){
+          document.getElementById(div).style.display = 'none';
+          divState[div] = false;
+        }
+      }
+      divid.style.display = (divid.style.display == 'flex' ? 'none' : 'flex');
+    }
+  }
+  </script>
+</body>
+</html>

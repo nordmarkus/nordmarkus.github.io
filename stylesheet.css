@@ -1,0 +1,186 @@
+body {
+  scroll-behavior: smooth;
+  background-color: gray;
+  margin: 0px;
+}
+
+.frontLogo {
+  width: 100%;
+  text-align: center;
+}
+
+.buttonDiv {
+  position: absolute;
+  margin: auto;
+  right: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#content > div {display:none;}
+
+.webcamDiv {
+  height: 355px;
+  width: 75%;
+  margin: auto;
+  right: 0;
+  left: 0;
+  top: 260px;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  display: none;
+}
+
+#myImg {
+  border: 1px solid black;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin: 10px;
+}
+
+#myImg:hover {
+  opacity: 0.7;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  padding-top: 100px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0, 0, 0);
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.modal-content {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 720px;
+}
+
+#caption {
+  margin: auto;
+  display: block;
+  width: 80%;
+  max-width: 700px;
+  text-align: center;
+  color: #ccc;
+  padding: 10px 0;
+  height: 150px;
+}
+
+.modal-content,
+#caption {
+  animation-name: zoom;
+  animation-duration: 0.6s;
+}
+
+@keyframes zoom {
+  from {
+    transform: scale(0)
+  }
+  to {
+    transform: scale(1)
+  }
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.close:hover,
+.close:focus {
+  color: #bbb;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media only screen and (max-width: 700px) {
+  .modal-content {
+    width: 100%;
+  }
+}
+
+.weatherDiv
+{
+    height   : 355px;
+    width    : 870px;
+    overflow : hidden;
+    height: 300px;
+    width: 300px%;
+    margin: auto;
+    right: 0;
+    left: 0;
+    top: 260px;
+    border: 1px solid black;
+    border-radius: 5px;
+    position: absolute;
+    display: none;
+}
+
+#myFrame
+{
+    position : absolute;
+    top      : -340px;
+    left     : -290px;
+    width    : 1280px;
+    height   : 720px;
+}
+
+.button {
+  background-color: #e7e7e7;
+  color: black;
+  border: 1px solid black;
+  border-radius: 5px;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 12px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+.e6bxDiv
+{
+    height   : 355px;
+    width    : 870px;
+    overflow : hidden;
+    height: 300px;
+    width: 300px%;
+    margin: auto;
+    right: 0;
+    left: 0;
+    top: 260px;
+    border: 1px solid black;
+    border-radius: 5px;
+    position: absolute;
+    display: none;
+}
+
+#myFrame2
+{
+    position : absolute;
+    top      : -235px;
+    left     : -25px;
+    width    : 1000px;
+    height   : 720px;
+}
