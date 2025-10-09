@@ -3,76 +3,186 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vind – modell (uten ID)</title>
+  <title>SN36330 – Målte vinddata (siste time)</title>
+  <meta name="description" content="Vindretning, vind og høyeste vindkast (10 min) fra SN36330, hentet fra Seklima (uten API-nøkkel)" />
   <style>
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:#0f172a; color:#e5e7eb; }
-    .wrap { max-width: 900px; margin: 24px auto; padding: 0 16px 40px; }
-    header { display:flex; gap:16px; align-items:baseline; }
-    h1 { font-size:1.3rem; margin:0; }
-    .meta { color:#9ca3af; }
-    .card { margin-top:16px; background:#0b1220; border:1px solid #1f2937; border-radius:12px; padding:16px; }
-    .grid { display:grid; grid-template-columns: auto 1fr; gap:16px; align-items:center; }
-    .compass { width:90px; height:90px; background: radial-gradient(circle at 50% 50%, #0e1830, #0b1220 60%); border:1px solid #1f2937; border-radius:50%; position:relative; }
-    .compass::before { content:"N"; position:absolute; top:6px; left:50%; transform:translateX(-50%); color:#9ca3af; font-size:12px; }
-    .needle { position:absolute; left:50%; top:50%; width:2px; height:38px; background:#60a5fa; transform-origin: bottom center; transform: translate(-50%, -100%) rotate(0deg); border-radius:2px; box-shadow: 0 0 8px rgba(96,165,250,.7); }
-    .center-dot { position:absolute; left:50%; top:50%; width:8px; height:8px; border-radius:50%; transform:translate(-50%,-50%); background:#93c5fd; }
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #60a5fa;
+      --accent2: #fbbf24;
+      --card: #0b1220;
+      --border: #1f2937;
+    }
+    html, body { margin:0; padding:0; background: radial-gradient(1200px 600px at 20% -10%, #13203a 0%, var(--bg) 60%); color: var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+    .wrap { max-width: 1100px; margin: 24px auto; padding: 0 16px 40px; }
+    header { display:flex; flex-wrap:wrap; align-items:baseline; gap:12px 24px; margin-bottom:16px; }
+    header h1 { font-size:1.4rem; margin:0; letter-spacing:.2px; }
+    header .meta { color:var(--muted); font-size:.95rem; }
+    .grid { display:grid; grid-template-columns: 1.2fr 1fr; gap:16px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: linear-gradient(180deg, #0d1426 0%, var(--card) 100%); border:1px solid var(--border); border-radius:14px; padding:16px; box-shadow: 0 10px 30px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03); }
+    .headline { display:grid; grid-template-columns: auto 1fr auto; gap:16px; align-items:center; }
+    .compass { width:90px; height:90px; background: radial-gradient(circle at 50% 50%, #0e1830, #0b1220 60%); border:1px solid var(--border); border-radius:50%; position:relative; box-shadow: inset 0 0 20px rgba(0,0,0,.35); }
+    .compass::before { content:"N"; position:absolute; top:6px; left:50%; transform:translateX(-50%); color:var(--muted); font-size:12px; letter-spacing:1px; }
+    .needle { position:absolute; left:50%; top:50%; width:2px; height:38px; background: var(--accent); transform-origin: bottom center; transform: translate(-50%, -100%) rotate(0deg); border-radius:2px; box-shadow: 0 0 8px rgba(96,165,250,.7); }
+    .center-dot { position:absolute; left:50%; top:50%; width:8px; height:8px; border-radius:50%; transform:translate(-50%,-50%); background:#93c5fd; box-shadow: 0 0 10px rgba(147,197,253,.8); }
     .vals { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; }
-    .kv { background:#0d172a99; border:1px solid #1f2937; border-radius:10px; padding:10px 12px; }
-    .kv .k { color:#9ca3af; font-size:.85rem; margin-bottom:4px; }
+    .kv { background:#0d172a99; border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+    .kv .k { color:var(--muted); font-size:.85rem; margin-bottom:4px; }
     .kv .v { font-size:1.4rem; line-height:1.2; }
-    .kv .v .unit { color:#9ca3af; font-size:.9rem; margin-left:6px; }
-    .error { margin-top:8px; color:#fecaca; }
-    .foot { margin-top:10px; color:#9ca3af; font-size:.9rem; }
+    .kv .v .unit { color:var(--muted); font-size:.9rem; margin-left:6px; }
+    .status { margin-top:8px; color:var(--muted); font-size:.9rem; }
+    .chart { height:220px; position:relative; }
+    canvas { width:100%; height:100%; display:block; }
+    .legend { display:flex; gap:12px; margin-top:8px; color:var(--muted); font-size:.9rem; flex-wrap:wrap; }
+    .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:-1px; }
+    .dot.wind { background: var(--accent); }
+    .dot.gust { background: var(--accent2); }
+    .table-wrap { overflow:auto; max-height:360px; border-radius:10px; border:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; font-size:.95rem; }
+    thead th { position:sticky; top:0; background:#0b1220; color:var(--muted); text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); }
+    tbody td { padding:10px 12px; border-bottom:1px solid var(--border); }
+    tbody tr:hover td { background:#0c152a; }
+    .pill { padding:2px 8px; border-radius:999px; font-size:.85rem; border:1px solid var(--border); background:#0c162c; }
+    .footnote { margin-top:12px; color:var(--muted); font-size:.85rem; }
+    .error { color:#fecaca; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Vind – modell (siste time)</h1>
-      <div class="meta">Kilde: api.met.no Locationforecast 2.0 (ingen ID kreves)</div>
+      <h1>SN36330 – Målte vinddata (siste time)</h1>
+      <div class="meta">Kilde: Seklima (observasjoner) • Uten API‑nøkkel • Oppdateres hvert 60. sekund</div>
     </header>
 
-    <section class="card">
-      <div class="grid">
-        <div class="compass">
-          <div id="needle" class="needle"></div>
-          <div class="center-dot"></div>
+    <div class="grid">
+      <section class="card">
+        <div class="headline">
+          <div class="compass">
+            <div id="needle" class="needle" aria-hidden="true"></div>
+            <div class="center-dot"></div>
+          </div>
+          <div class="vals">
+            <div class="kv">
+              <div class="k">Retning</div>
+              <div class="v"><span id="dir-deg">–</span> <span class="unit">°</span></div>
+              <div class="status" id="dir-card">–</div>
+            </div>
+            <div class="kv">
+              <div class="k">Vind</div>
+              <div class="v"><span id="spd">–</span> <span class="unit">m/s</span></div>
+              <div class="status" id="ts">–</div>
+            </div>
+            <div class="kv">
+              <div class="k">Høyeste kast (10 min)</div>
+              <div class="v"><span id="gust">–</span> <span class="unit">m/s</span></div>
+              <div class="status">Målt</div>
+            </div>
+          </div>
+          <div></div>
         </div>
-        <div class="vals">
-          <div class="kv">
-            <div class="k">Retning</div>
-            <div class="v"><span id="dir-deg">–</span> <span class="unit">°</span></div>
-            <div class="foot" id="dir-card">–</div>
-          </div>
-          <div class="kv">
-            <div class="k">Vind</div>
-            <div class="v"><span id="spd">–</span> <span class="unit">m/s</span></div>
-            <div class="foot" id="ts">–</div>
-          </div>
-          <div class="kv">
-            <div class="k">Kast (modell)</div>
-            <div class="v"><span id="gust">–</span> <span class="unit">m/s</span></div>
-            <div class="foot">Beregnet</div>
-          </div>
+
+        <div class="chart" style="margin-top:14px;">
+          <canvas id="chart" width="1000" height="400" aria-label="Vind siste time"></canvas>
         </div>
-      </div>
-      <div id="err" class="error" style="display:none;"></div>
-      <div class="foot">Bruk enkel CORS og identifiser med User-Agent i fetch; api.met.no anbefaler dette for klienter uten backend. [retningslinjer] [web:55][web:28]</div>
-    </section>
+        <div class="legend">
+          <span><span class="dot wind"></span>Vind (m/s)</span>
+          <span><span class="dot gust"></span>Kast (m/s)</span>
+        </div>
+        <div class="footnote">
+          Data fra seklima.met.no, Meteorologisk institutt; vis til kilde ved viderebruk (CC BY 4.0). [web:2]
+        </div>
+        <div class="footnote error" id="err" style="display:none;"></div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top:0;margin-bottom:10px;font-size:1.05rem;color:var(--muted);">Målinger per minutt</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tid</th>
+                <th>Retning (°)</th>
+                <th>Kompass</th>
+                <th>Vind (m/s)</th>
+                <th>Kast (m/s)</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </div>
 
   <script>
-    // Set the station coordinates; example values must be updated to SN36330 lat/lon.
-    const LAT = 58.4600;   // TODO: set actual
-    const LON = 8.7720;    // TODO: set actual
-    const API = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${LAT.toFixed(4)}&lon=${LON.toFixed(4)}`;
+    // =========================
+    // CONFIG
+    // =========================
+    const SEKLIMA_URL = "https://seklima.met.no/minutes/wind_from_direction,wind_speed,max(wind_speed_of_gust%20PT10M)/last_hour/SN36330/nb/"; // Station last hour. [web:2]
+    const LOCAL_PROXY = "/seklima/last-hour"; // Route the SW will intercept. [web:21]
 
+    // =========================
+    // SERVICE WORKER (same-file)
+    // =========================
+    // Register a SW via Blob URL that proxies LOCAL_PROXY to SEKLIMA_URL, returning raw HTML for parsing. [web:21]
+    const swCode = `
+      const TARGET = ${JSON.stringify(SEKLIMA_URL)};
+      self.addEventListener("install", (e) => self.skipWaiting());
+      self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+      self.addEventListener("fetch", (event) => {
+        const url = new URL(event.request.url);
+        if (url.origin === location.origin && url.pathname === ${JSON.stringify(LOCAL_PROXY)}) {
+          event.respondWith((async () => {
+            try {
+              const r = await fetch(TARGET, { method:"GET", credentials:"omit", cache:"no-cache", redirect:"follow" });
+              const body = await r.text();
+              return new Response(body, {
+                status: r.status,
+                statusText: r.statusText,
+                headers: {
+                  "Content-Type": "text/html; charset=utf-8",
+                  "Cache-Control": "no-store",
+                  "Access-Control-Allow-Origin": "*"
+                }
+              });
+            } catch (e) {
+              return new Response("Proxy error: " + String(e), { status: 502, headers: { "Content-Type": "text/plain" } });
+            }
+          })());
+        }
+      });
+    `;
+
+    async function registerSW() {
+      if (!("serviceWorker" in navigator)) {
+        throw new Error("Service Worker ikke støttet");
+      }
+      const blob = new Blob([swCode], { type: "text/javascript" });
+      const url = URL.createObjectURL(blob);
+      const reg = await navigator.serviceWorker.register(url, { scope: "./" });
+      if (!navigator.serviceWorker.controller) {
+        await new Promise((resolve) => {
+          const onCtrl = () => { if (navigator.serviceWorker.controller) { navigator.serviceWorker.removeEventListener("controllerchange", onCtrl); resolve(); } };
+          navigator.serviceWorker.addEventListener("controllerchange", onCtrl);
+        });
+      }
+      return reg;
+    }
+
+    // =========================
+    // UI HELPERS
+    // =========================
     const needle = document.getElementById("needle");
     const dirDegEl = document.getElementById("dir-deg");
     const dirCardEl = document.getElementById("dir-card");
     const spdEl = document.getElementById("spd");
     const gustEl = document.getElementById("gust");
     const tsEl = document.getElementById("ts");
+    const rowsEl = document.getElementById("rows");
     const errEl = document.getElementById("err");
 
     function degToCardinal(deg) {
@@ -81,51 +191,169 @@
       return dirs[Math.round(deg / 45) % 8];
     }
     function nice(value, dp=1) { return (value==null||isNaN(value)) ? "–" : Number(value).toFixed(dp); }
-    function formatTs(iso) { try { return new Date(iso).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }); } catch { return iso; } }
+    function formatTs(isoOrText) {
+      // Seklima table shows ISO or localized time; display as-is if parsing fails. [web:2]
+      const t = String(isoOrText || "").trim();
+      const d = new Date(t);
+      if (!isNaN(d.getTime())) return d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+      return t;
+    }
 
-    async function load() {
+    function drawChart(canvas, data) {
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0,0,W,H);
+      const padding = { l:50, r:12, t:18, b:28 };
+      const plotW = W - padding.l - padding.r;
+      const plotH = H - padding.t - padding.b;
+
+      const xs = data.map(d => new Date(d.time).getTime());
+      const s1 = data.map(d => d.wind_speed);
+      const s2 = data.map(d => d.gust);
+      const tMin = Math.min(...xs), tMax = Math.max(...xs);
+      const yMax = Math.max(5, Math.ceil(Math.max(...s1.filter(x=>!isNaN(x),0), ...s2.filter(x=>!isNaN(x),0)) + 1));
+      const xScale = (t) => tMax === tMin ? padding.l + plotW : padding.l + ((t - tMin) / (tMax - tMin)) * plotW;
+      const yScale = (v) => padding.t + plotH - ((v / yMax) * plotH);
+
+      ctx.strokeStyle = "rgba(255,255,255,.06)";
+      ctx.lineWidth = 1;
+      for (let i=0;i<=5;i++) {
+        const y = padding.t + (plotH * i/5);
+        ctx.beginPath(); ctx.moveTo(padding.l, y); ctx.lineTo(W - padding.r, y); ctx.stroke();
+        const label = (yMax * (1 - i/5)).toFixed(0);
+        ctx.fillStyle = "#9ca3af"; ctx.font = "12px system-ui, sans-serif"; ctx.textAlign="right"; ctx.textBaseline="middle";
+        ctx.fillText(label, padding.l - 6, y);
+      }
+      const minutes = Math.max(1, Math.round((tMax - tMin) / 60000));
+      const step = Math.max(1, Math.round(minutes / 6));
+      ctx.fillStyle = "#9ca3af"; ctx.font = "12px system-ui, sans-serif"; ctx.textAlign="center"; ctx.textBaseline="top";
+      for (let i=0;i<=minutes;i+=step) {
+        const t = tMin + i*60000; const x = xScale(t);
+        ctx.beginPath(); ctx.moveTo(x, H - padding.b); ctx.lineTo(x, H - padding.b + 4); ctx.strokeStyle="rgba(255,255,255,.2)"; ctx.stroke();
+        const s = new Date(t).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+        ctx.fillText(s, x, H - padding.b + 6);
+      }
+      function line(vals, color) {
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); let started = false;
+        for (let i=0;i<vals.length;i++) {
+          const v = vals[i]; if (v == null || isNaN(v)) { started = false; continue; }
+          const x = xScale(xs[i]), y = yScale(v);
+          if (!started) { ctx.moveTo(x,y); started = true; } else { ctx.lineTo(x,y); }
+        }
+        ctx.stroke();
+      }
+      const getVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n) || "";
+      line(s1, getVar('--accent') || '#60a5fa');
+      line(s2, getVar('--accent2') || '#fbbf24');
+    }
+
+    function toRow(d) {
+      const tr = document.createElement("tr");
+      const td = (t) => { const el = document.createElement("td"); el.textContent = t; return el; };
+      const tdPill = (t) => { const el = document.createElement("td"); const s = document.createElement("span"); s.className="pill"; s.textContent=t; el.appendChild(s); return el; };
+      tr.appendChild(td(formatTs(d.time)));
+      tr.appendChild(td(nice(d.wind_from_direction,0)));
+      tr.appendChild(tdPill(degToCardinal(d.wind_from_direction)));
+      tr.appendChild(td(nice(d.wind_speed,1)));
+      tr.appendChild(td(nice(d.gust,1)));
+      return tr;
+    }
+
+    // =========================
+    // DATA FETCH + PARSE
+    // =========================
+    async function fetchSeklimaHTML() {
+      const res = await fetch(LOCAL_PROXY, { method:"GET", cache:"no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status + " " + res.statusText);
+      return await res.text();
+    }
+
+    function parseSeklimaTable(html) {
+      // Create DOM and locate first data table. [web:2]
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      // Try to find table with body rows
+      let table = doc.querySelector("table");
+      // Prefer the main data table if multiple exist
+      const candidates = Array.from(doc.querySelectorAll("table")).filter(t => t.querySelectorAll("tbody tr").length > 0);
+      if (candidates.length) table = candidates[0];
+      if (!table) throw new Error("Fant ingen tabell i Seklima-siden");
+
+      const headCells = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim().toLowerCase());
+      const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+      // Determine column mapping by matching known element names
+      // Typical order: Time | wind_from_direction | wind_speed | max(wind_speed_of_gust PT10M)
+      const idxTime = headCells.findIndex(h => /tid|time|referencetime/i.test(h)) !== -1 ? headCells.findIndex(h => /tid|time|referencetime/i.test(h)) : 0;
+      const idxDir  = headCells.findIndex(h => /wind_from_direction/i.test(h)) !== -1 ? headCells.findIndex(h => /wind_from_direction/i.test(h)) : 1;
+      const idxSpd  = headCells.findIndex(h => /wind_speed/i.test(h)) !== -1 ? headCells.findIndex(h => /wind_speed/i.test(h)) : 2;
+      const idxGust = headCells.findIndex(h => /max\(wind_speed_of_gust/i.test(h)) !== -1 ? headCells.findIndex(h => /max\(wind_speed_of_gust/i.test(h)) : 3;
+
+      const out = [];
+      for (const tr of rows) {
+        const tds = Array.from(tr.querySelectorAll("td"));
+        if (tds.length < 4) continue;
+        const time = tds[idxTime]?.textContent?.trim();
+        const parseNum = (s) => {
+          const v = String(s || "").trim().replace(",", ".");
+          const n = Number(v);
+          return isNaN(n) ? null : n;
+        };
+        const dir = parseNum(tds[idxDir]?.textContent);
+        const spd = parseNum(tds[idxSpd]?.textContent);
+        const gust = parseNum(tds[idxGust]?.textContent);
+        if (time) out.push({ time, wind_from_direction: dir, wind_speed: spd, gust });
+      }
+      // Sort ascending by time if parsable, otherwise keep order
+      out.sort((a,b) => new Date(a.time) - new Date(b.time));
+      return out;
+    }
+
+    async function refresh() {
       try {
         errEl.style.display = "none";
-        const res = await fetch(API, {
-          method: "GET",
-          headers: {
-            // User-Agent cannot be set by browsers; use 'Referer' and default UA. API allows simple CORS without custom headers. [web:55][web:28]
-          },
-          cache: "no-store"
-        });
-        if (!res.ok) throw new Error("HTTP " + res.status + " " + res.statusText);
-        const json = await res.json();
+        const html = await fetchSeklimaHTML(); // via SW proxy. [web:21]
+        const obs = parseSeklimaTable(html);   // parse measured direction, speed, 10-min max gust. [web:2]
+        if (!obs.length) throw new Error("Ingen observasjoner funnet i tabellen");
 
-        const ts = json?.properties?.timeseries;
-        if (!Array.isArray(ts) || !ts.length) throw new Error("Ingen data");
-        const now = ts[0]; // first element is the nearest valid time
-        const time = now.time || now?.data?.instant?.details?.time;
+        const latest = obs[obs.length - 1];
 
-        // Wind details: instant.details has wind_speed and wind_from_direction. [web:56]
-        const inst = now.data?.instant?.details || {};
-        const sixh = now.data?.next_1_hours?.details || now.data?.next_6_hours?.details || {};
-        const spd = inst.wind_speed;
-        const dir = inst.wind_from_direction;
-        // Gusts not always provided; sometimes next_1_hours contains wind_speed_of_gust. [web:56]
-        const gust = sixh.wind_speed_of_gust ?? inst.wind_speed_of_gust;
+        // Update headline
+        document.getElementById("dir-deg").textContent = nice(latest.wind_from_direction, 0);
+        document.getElementById("dir-card").textContent = degToCardinal(latest.wind_from_direction);
+        document.getElementById("spd").textContent = nice(latest.wind_speed, 1);
+        document.getElementById("gust").textContent = nice(latest.gust, 1);
+        document.getElementById("ts").textContent = "Kl " + formatTs(latest.time);
 
-        dirDegEl.textContent = nice(dir, 0);
-        dirCardEl.textContent = degToCardinal(dir);
-        spdEl.textContent = nice(spd, 1);
-        gustEl.textContent = gust == null ? "–" : nice(gust, 1);
-        tsEl.textContent = "Kl " + formatTs(time);
-
-        if (!isNaN(Number(dir))) {
-          needle.style.transform = `translate(-50%, -100%) rotate(${Number(dir)}deg)`;
+        // Compass
+        const deg = Number(latest.wind_from_direction);
+        if (!isNaN(deg)) {
+          needle.style.transform = `translate(-50%, -100%) rotate(${deg}deg)`;
         }
+
+        // Table (latest first)
+        rowsEl.innerHTML = "";
+        obs.slice().reverse().forEach(o => rowsEl.appendChild(toRow(o)));
+
+        // Chart
+        const canvas = document.getElementById("chart");
+        drawChart(canvas, obs.map(o => ({ time:o.time, wind_speed:o.wind_speed, gust:o.gust })));
       } catch (e) {
         errEl.style.display = "block";
-        errEl.textContent = "Feil ved henting av modell-data: " + (e?.message || e);
+        errEl.textContent = "Feil ved henting/parsing: " + (e?.message || e);
       }
     }
 
-    load();
-    setInterval(load, 60000);
+    (async () => {
+      try {
+        // SW requires HTTPS or localhost. Serve this file via a local server or HTTPS hosting. [web:21]
+        await registerSW();
+        await refresh();
+        setInterval(refresh, 60000);
+      } catch (e) {
+        errEl.style.display = "block";
+        errEl.textContent = "Init‑feil: " + (e?.message || e);
+      }
+    })();
   </script>
 </body>
 </html>
