@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wind Data in Knots - SN36330</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 400px; margin: 2em auto; padding: 1em; background: #f7f9fc; color: #333; }
+  h1 { font-size: 1.5em; text-align: center; margin-bottom: 1em; }
+  .wind-data { font-size: 1.2em; line-height: 1.6; }
+  button { margin-top: 1em; padding: 0.5em 1em; font-size: 1em; cursor: pointer; }
+  #error { color: red; font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>Wind Data for Station SN36330</h1>
+  <div id="error"></div>
+  <div class="wind-data" id="windOutput">Loading...</div>
+  <button id="refreshBtn">Refresh Data</button>
+
+<script>
+  const clientId = '64a8d037-3efb-471f-bdd5-f349e6b19f85';
+  const clientSecret = 'e59ec8d5-bfd8-4450-ba47-5f8b33ff0464';
+
+  // Base64 encode of clientId:clientSecret for basic auth
+  const basicAuth = 'Basic ' + btoa(clientId + ':' + clientSecret);
+
+  const apiUrl = 'https://frost.met.no/observations/v0.jsonld?sources=SN36330&elements=wind_from_direction,wind_speed,wind_speed_of_gust&referencetime=latest';
+
+  function msToKnots(ms) {
+    return ms !== null && !isNaN(ms) ? (ms * 1.944).toFixed(1) : 'N/A';
+  }
+
+  async function fetchWindData() {
+    const errorDiv = document.getElementById('error');
+    const output = document.getElementById('windOutput');
+    errorDiv.textContent = '';
+    output.textContent = 'Loading...';
+
+    try {
+      const response = await fetch(apiUrl, {
+        headers: { 'Authorization': basicAuth }
+      });
+      if (!response.ok) {
+        throw new Error('HTTP error ' + response.status);
+      }
+      const json = await response.json();
+
+      const observations = json.data || [];
+      if (observations.length === 0) {
+        output.textContent = 'No data available';
+        return;
+      }
+
+      // Extract values
+      let windDir = 'N/A', windSpeed = 'N/A', windGust = 'N/A';
+
+      observations.forEach(obs => {
+        if (obs.elementId === 'wind_from_direction' && obs.observations?.length) {
+          windDir = obs.observations[0].value;
+        }
+        if (obs.elementId === 'wind_speed' && obs.observations?.length) {
+          windSpeed = obs.observations[0].value;
+        }
+        if (obs.elementId === 'wind_speed_of_gust' && obs.observations?.length) {
+          windGust = obs.observations[0].value;
+        }
+      });
+
+      output.innerHTML =
+        `Wind direction: <strong>${windDir}°</strong><br>` +
+        `Wind speed: <strong>${msToKnots(windSpeed)} knots</strong><br>` +
+        `Wind gusts: <strong>${msToKnots(windGust)} knots</strong>`;
+
+    } catch (e) {
+      errorDiv.textContent = 'Failed to fetch data: ' + e.message;
+      output.textContent = '';
+    }
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', fetchWindData);
+
+  // Fetch initially on load
+  fetchWindData();
+</script>
+</body>
+</html>
