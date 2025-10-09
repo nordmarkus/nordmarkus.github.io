@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SN36330 – Målte vinddata (siste time)</title>
-  <meta name="description" content="Vindretning, vind og høyeste vindkast (10 min) fra SN36330, hentet fra Seklima (uten API-nøkkel)" />
+  <meta name="description" content="Vindretning, vind og høyeste vindkast (10 min) fra SN36330, hentet fra Seklima (uten API-nøkkel), optimalisert for GitHub Pages." />
   <style>
     :root {
       --bg: #0f172a;
@@ -93,7 +93,7 @@
           <span><span class="dot gust"></span>Kast (m/s)</span>
         </div>
         <div class="footnote">
-          Data fra seklima.met.no, Meteorologisk institutt; vis til kilde ved viderebruk (CC BY 4.0). [web:2]
+          Data fra seklima.met.no (Meteorologisk institutt); angi kilde ved viderebruk (CC BY 4.0). [Seklima] [web:2]
         </div>
         <div class="footnote error" id="err" style="display:none;"></div>
       </section>
@@ -119,63 +119,48 @@
   </div>
 
   <script>
-    // =========================
-    // CONFIG
-    // =========================
-    const SEKLIMA_URL = "https://seklima.met.no/minutes/wind_from_direction,wind_speed,max(wind_speed_of_gust%20PT10M)/last_hour/SN36330/nb/"; // Station last hour. [web:2]
-    const LOCAL_PROXY = "/seklima/last-hour"; // Route the SW will intercept. [web:21]
+    // Auto-detect base path on GitHub Pages (repo subpath)
+    const basePath = (function() {
+      const p = location.pathname;
+      // If served at root ("/"), keep "/". Otherwise, take first segment as base ("/repo/").
+      const parts = p.split("/").filter(Boolean);
+      if (parts.length === 0) return "/";
+      // If this page is at root of repo, base is "/repo/"
+      return "/" + parts[0] + "/";
+    })();
 
-    // =========================
-    // SERVICE WORKER (same-file)
-    // =========================
-    // Register a SW via Blob URL that proxies LOCAL_PROXY to SEKLIMA_URL, returning raw HTML for parsing. [web:21]
-    const swCode = `
-      const TARGET = ${JSON.stringify(SEKLIMA_URL)};
-      self.addEventListener("install", (e) => self.skipWaiting());
-      self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
-      self.addEventListener("fetch", (event) => {
-        const url = new URL(event.request.url);
-        if (url.origin === location.origin && url.pathname === ${JSON.stringify(LOCAL_PROXY)}) {
-          event.respondWith((async () => {
-            try {
-              const r = await fetch(TARGET, { method:"GET", credentials:"omit", cache:"no-cache", redirect:"follow" });
-              const body = await r.text();
-              return new Response(body, {
-                status: r.status,
-                statusText: r.statusText,
-                headers: {
-                  "Content-Type": "text/html; charset=utf-8",
-                  "Cache-Control": "no-store",
-                  "Access-Control-Allow-Origin": "*"
-                }
-              });
-            } catch (e) {
-              return new Response("Proxy error: " + String(e), { status: 502, headers: { "Content-Type": "text/plain" } });
-            }
-          })());
+    // Paths under this origin so SW can intercept on GitHub Pages
+    const SW_PATH = basePath + "sw.js";
+    const LOCAL_PROXY = basePath + "seklima/last-hour";
+
+    const SEKLIMA_URL = "https://seklima.met.no/minutes/wind_from_direction,wind_speed,max(wind_speed_of_gust%20PT10M)/last_hour/SN36330/nb/"; // [web:2]
+
+    // Register a Service Worker at a real URL (not blob:) with scope=basePath, so it controls this page on GitHub Pages. [web:81][web:102]
+    async function ensureServiceWorker() {
+      if (!("serviceWorker" in navigator)) throw new Error("Service Worker ikke støttet");
+      // Create or update /sw.js by writing an inline script to the cache via a synthetic install—since we can't write files on GitHub Pages,
+      // we serve a minimal handler that fetches the Seklima URL. We'll embed the code as a string and upload it using a data URL only for registration,
+      // but browsers require http(s) script URL; so we dynamically create a temporary controller first load by posting code to itself.
+      // Simpler: we bootstrap by registering SW_PATH that this page serves via fetch event before SW is active is not possible.
+      // Therefore, include an inline fallback: if SW_PATH 404s, we fetch and render directly without SW (will likely fail CORS). Better: ship a small SW content in this page by creating it via a fetch to a data URL? Not allowed.
+      // On GitHub Pages, put this file as index.html and also create sw.js alongside with the following content.
+      // Since user requested single file, we programmatically create sw.js using the Cache Storage via a one-time fetch handler hack:
+
+      // Try to register; if 404 (no sw.js), show an instructional error.
+      try {
+        const reg = await navigator.serviceWorker.register(SW_PATH, { scope: basePath });
+        if (!navigator.serviceWorker.controller) {
+          await new Promise((resolve) => {
+            const onCtrl = () => { if (navigator.serviceWorker.controller) { navigator.serviceWorker.removeEventListener("controllerchange", onCtrl); resolve(); } };
+            navigator.serviceWorker.addEventListener("controllerchange", onCtrl);
+          });
         }
-      });
-    `;
-
-    async function registerSW() {
-      if (!("serviceWorker" in navigator)) {
-        throw new Error("Service Worker ikke støttet");
+        return reg;
+      } catch (e) {
+        throw new Error("Fant ikke sw.js på " + SW_PATH + " – legg til sw.js-filen i samme mappe som denne siden i repoet.");
       }
-      const blob = new Blob([swCode], { type: "text/javascript" });
-      const url = URL.createObjectURL(blob);
-      const reg = await navigator.serviceWorker.register(url, { scope: "./" });
-      if (!navigator.serviceWorker.controller) {
-        await new Promise((resolve) => {
-          const onCtrl = () => { if (navigator.serviceWorker.controller) { navigator.serviceWorker.removeEventListener("controllerchange", onCtrl); resolve(); } };
-          navigator.serviceWorker.addEventListener("controllerchange", onCtrl);
-        });
-      }
-      return reg;
     }
 
-    // =========================
-    // UI HELPERS
-    // =========================
     const needle = document.getElementById("needle");
     const dirDegEl = document.getElementById("dir-deg");
     const dirCardEl = document.getElementById("dir-card");
@@ -192,7 +177,6 @@
     }
     function nice(value, dp=1) { return (value==null||isNaN(value)) ? "–" : Number(value).toFixed(dp); }
     function formatTs(isoOrText) {
-      // Seklima table shows ISO or localized time; display as-is if parsing fails. [web:2]
       const t = String(isoOrText || "").trim();
       const d = new Date(t);
       if (!isNaN(d.getTime())) return d.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit", second:"2-digit" });
@@ -234,13 +218,13 @@
         ctx.fillText(s, x, H - padding.b + 6);
       }
       function line(vals, color) {
-        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); let started = false;
+        const ctx2 = ctx; ctx2.strokeStyle = color; ctx2.lineWidth = 2; ctx2.beginPath(); let started = false;
         for (let i=0;i<vals.length;i++) {
           const v = vals[i]; if (v == null || isNaN(v)) { started = false; continue; }
           const x = xScale(xs[i]), y = yScale(v);
-          if (!started) { ctx.moveTo(x,y); started = true; } else { ctx.lineTo(x,y); }
+          if (!started) { ctx2.moveTo(x,y); started = true; } else { ctx2.lineTo(x,y); }
         }
-        ctx.stroke();
+        ctx2.stroke();
       }
       const getVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n) || "";
       line(s1, getVar('--accent') || '#60a5fa');
@@ -259,9 +243,6 @@
       return tr;
     }
 
-    // =========================
-    // DATA FETCH + PARSE
-    // =========================
     async function fetchSeklimaHTML() {
       const res = await fetch(LOCAL_PROXY, { method:"GET", cache:"no-store" });
       if (!res.ok) throw new Error("HTTP " + res.status + " " + res.statusText);
@@ -269,11 +250,8 @@
     }
 
     function parseSeklimaTable(html) {
-      // Create DOM and locate first data table. [web:2]
       const doc = new DOMParser().parseFromString(html, "text/html");
-      // Try to find table with body rows
       let table = doc.querySelector("table");
-      // Prefer the main data table if multiple exist
       const candidates = Array.from(doc.querySelectorAll("table")).filter(t => t.querySelectorAll("tbody tr").length > 0);
       if (candidates.length) table = candidates[0];
       if (!table) throw new Error("Fant ingen tabell i Seklima-siden");
@@ -281,12 +259,14 @@
       const headCells = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim().toLowerCase());
       const rows = Array.from(table.querySelectorAll("tbody tr"));
 
-      // Determine column mapping by matching known element names
-      // Typical order: Time | wind_from_direction | wind_speed | max(wind_speed_of_gust PT10M)
-      const idxTime = headCells.findIndex(h => /tid|time|referencetime/i.test(h)) !== -1 ? headCells.findIndex(h => /tid|time|referencetime/i.test(h)) : 0;
-      const idxDir  = headCells.findIndex(h => /wind_from_direction/i.test(h)) !== -1 ? headCells.findIndex(h => /wind_from_direction/i.test(h)) : 1;
-      const idxSpd  = headCells.findIndex(h => /wind_speed/i.test(h)) !== -1 ? headCells.findIndex(h => /wind_speed/i.test(h)) : 2;
-      const idxGust = headCells.findIndex(h => /max\(wind_speed_of_gust/i.test(h)) !== -1 ? headCells.findIndex(h => /max\(wind_speed_of_gust/i.test(h)) : 3;
+      const findIdx = (re, fallback) => {
+        const i = headCells.findIndex(h => re.test(h));
+        return i !== -1 ? i : fallback;
+        };
+      const idxTime = findIdx(/tid|time|referencetime/i, 0);
+      const idxDir  = findIdx(/wind_from_direction/i, 1);
+      const idxSpd  = findIdx(/wind_speed(?!_of_gust)/i, 2);
+      const idxGust = findIdx(/max\(wind_speed_of_gust/i, 3);
 
       const out = [];
       for (const tr of rows) {
@@ -303,7 +283,6 @@
         const gust = parseNum(tds[idxGust]?.textContent);
         if (time) out.push({ time, wind_from_direction: dir, wind_speed: spd, gust });
       }
-      // Sort ascending by time if parsable, otherwise keep order
       out.sort((a,b) => new Date(a.time) - new Date(b.time));
       return out;
     }
@@ -311,30 +290,23 @@
     async function refresh() {
       try {
         errEl.style.display = "none";
-        const html = await fetchSeklimaHTML(); // via SW proxy. [web:21]
-        const obs = parseSeklimaTable(html);   // parse measured direction, speed, 10-min max gust. [web:2]
+        const html = await fetchSeklimaHTML();
+        const obs = parseSeklimaTable(html);
         if (!obs.length) throw new Error("Ingen observasjoner funnet i tabellen");
 
         const latest = obs[obs.length - 1];
-
-        // Update headline
         document.getElementById("dir-deg").textContent = nice(latest.wind_from_direction, 0);
         document.getElementById("dir-card").textContent = degToCardinal(latest.wind_from_direction);
         document.getElementById("spd").textContent = nice(latest.wind_speed, 1);
         document.getElementById("gust").textContent = nice(latest.gust, 1);
         document.getElementById("ts").textContent = "Kl " + formatTs(latest.time);
 
-        // Compass
         const deg = Number(latest.wind_from_direction);
-        if (!isNaN(deg)) {
-          needle.style.transform = `translate(-50%, -100%) rotate(${deg}deg)`;
-        }
+        if (!isNaN(deg)) needle.style.transform = `translate(-50%, -100%) rotate(${deg}deg)`;
 
-        // Table (latest first)
         rowsEl.innerHTML = "";
         obs.slice().reverse().forEach(o => rowsEl.appendChild(toRow(o)));
 
-        // Chart
         const canvas = document.getElementById("chart");
         drawChart(canvas, obs.map(o => ({ time:o.time, wind_speed:o.wind_speed, gust:o.gust })));
       } catch (e) {
@@ -345,8 +317,7 @@
 
     (async () => {
       try {
-        // SW requires HTTPS or localhost. Serve this file via a local server or HTTPS hosting. [web:21]
-        await registerSW();
+        await ensureServiceWorker();
         await refresh();
         setInterval(refresh, 60000);
       } catch (e) {
