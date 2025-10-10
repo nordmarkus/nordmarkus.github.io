@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Wind Data SN36330 - Arendal Lufthavn</title>
+  <title>Frost API Wind Data SN36330 with CORS Proxy</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; background: #fafbfc; color: #222; }
     h2 { color: #1762A7; }
@@ -12,47 +12,46 @@
   </style>
 </head>
 <body>
-  <h2>Wind Data – SN36330 Arendal Lufthavn</h2>
-  <div id="wind-data">
-    <p>Fetching...</p>
-  </div>
+  <h2>Wind Data – SN36330 Arendal Lufthavn (Frost API + CORS Proxy)</h2>
+  <div id="wind-data"><p>Fetching...</p></div>
   <script>
+    const clientId = 'ed077068-5080-4a01-9fc8-dced14d78b4e';
+    const clientSecret = '9f954f85-9705-4a15-879b-a3ac2a526d2b';
+    const basicAuth = btoa(`${clientId}:${clientSecret}`);
+
     async function fetchWind() {
-      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-      const apiUrl = 'https://seklima.met.no/minutes/wind_from_direction,wind_speed,max(wind_speed_of_gust%20PT10M)/last_hour/SN36330/nb/';
-      const url = proxyUrl + apiUrl;
+      const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+      const apiUrl = 'https://frost.met.no/observations/v0.jsonld?sources=SN36330&elements=wind_speed,wind_from_direction,wind_speed_of_gust&referencetime=latest';
+      const url = corsProxy + apiUrl;
 
       try {
         const response = await fetch(url, {
           headers: {
-            'User-Agent': 'WindDataDemo/1.0 https://github.com/'
+            'Authorization': 'Basic ' + basicAuth,
+            'Accept': 'application/json'
           }
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+        const data = await response.json();
+        const observations = data.data || [];
+        const obsMap = {};
+        for (const obs of observations) {
+          if (obs.elementId && obs.value !== undefined) {
+            obsMap[obs.elementId] = obs.value;
+          }
         }
 
-        const csvText = await response.text();
-        const lines = csvText.trim().split('\n');
-
-        const headers = lines[0].split(',');
-
-        const lastLine = lines[lines.length - 1].split(',');
-
-        const windDirIdx = headers.indexOf('wind_from_direction');
-        const windSpeedIdx = headers.indexOf('wind_speed');
-        const windGustIdx = headers.indexOf('max_wind_speed_of_gust_PT10M');
-
-        const windDirection = windDirIdx !== -1 ? lastLine[windDirIdx] : 'N/A';
-        const windSpeed = windSpeedIdx !== -1 ? lastLine[windSpeedIdx] : 'N/A';
-        const windGust = windGustIdx !== -1 ? lastLine[windGustIdx] : 'N/A';
+        const windSpeed = obsMap['wind_speed'] ?? 'N/A';
+        const windGust = obsMap['wind_speed_of_gust'] ?? 'N/A';
+        const windDirection = obsMap['wind_from_direction'] ?? 'N/A';
 
         document.getElementById('wind-data').innerHTML =
           `<div><span class="label">Wind speed:</span> ${windSpeed} m/s</div>
            <div><span class="label">Wind gust:</span> ${windGust} m/s</div>
            <div><span class="label">Wind direction:</span> ${windDirection}&deg;</div>
-           <div>Last updated: <span id="update-time">${new Date().toLocaleTimeString()}</span></div>`;
+           <div>Last updated: <span>${new Date().toLocaleTimeString()}</span></div>`;
 
       } catch (error) {
         document.getElementById('wind-data').innerHTML = `<p>Error fetching wind data: ${error.message}</p>`;
@@ -60,7 +59,7 @@
     }
 
     fetchWind();
-    setInterval(fetchWind, 60000); // Update every 60 seconds
+    setInterval(fetchWind, 60000);
   </script>
 </body>
 </html>
