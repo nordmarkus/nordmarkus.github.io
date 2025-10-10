@@ -20,26 +20,39 @@
     async function fetchWind() {
       const lat = 58.594;
       const lon = 8.074;
-      const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`;
+      const apiUrl = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`;
+
+      // Use CORS Anywhere proxy to avoid CORS issues
+      const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+      const url = proxyUrl + apiUrl;
 
       try {
         const response = await fetch(url, {
-          headers: { 'User-Agent': 'WindDataDemo/1.0 https://github.com/' }
+          headers: {
+            'User-Agent': 'WindDataDemo/1.0 https://github.com/'
+          }
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
         const instant = data.properties.timeseries[0].data.instant.details;
         const gust = data.properties.timeseries[0].data.next_1_hours?.details?.wind_speed_of_gust || 'N/A';
+
         document.getElementById('wind-data').innerHTML =
           `<div><span class="label">Wind speed:</span> ${instant.wind_speed} m/s</div>
            <div><span class="label">Wind gust:</span> ${gust} m/s</div>
            <div><span class="label">Wind direction:</span> ${instant.wind_from_direction}&deg;</div>
            <div>Last updated: <span id="update-time">${new Date().toLocaleTimeString()}</span></div>`;
-      } catch (e) {
-        document.getElementById('wind-data').innerHTML = "<p>Error fetching wind data.</p>";
+      } catch (error) {
+        document.getElementById('wind-data').innerHTML = `<p>Error fetching wind data: ${error.message}</p>`;
       }
     }
+
     fetchWind();
-    setInterval(fetchWind, 60000); // Update every 60 seconds (60000 ms)
+    setInterval(fetchWind, 60000); // Update every 60 seconds
   </script>
 </body>
 </html>
