@@ -3,147 +3,127 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ENGK Winds & Webcams</title>
+  <title>ENGK Winds</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #121417;
-      color: #d0d4da;
       margin: 0;
       padding: 2rem;
+      font-family: 'Consolas', 'Courier New', monospace;
+      background: radial-gradient(circle at center, #0a1a0a 0%, #010503 80%);
+      color: #a1ff9e;
       display: flex;
       flex-direction: column;
       align-items: center;
       min-height: 100vh;
       box-sizing: border-box;
+      user-select: none;
     }
     h1 {
       font-size: 3rem;
       font-weight: 700;
-      margin-bottom: 1rem;
-      color: #42a5f5;
-      user-select: none;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 0 8px #4dff4d, 0 0 15px #00ff00;
+      letter-spacing: 3px;
     }
     .wind-container {
+      background: #031103;
+      border: 2px solid #05ff00;
+      border-radius: 14px;
+      padding: 2rem 3rem;
+      box-shadow: 0 0 15px #00ff00aa inset;
+      max-width: 440px;
+      width: 100%;
       display: flex;
       align-items: center;
-      gap: 2rem;
-      background: #1e2229;
-      padding: 2rem 3rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(66, 165, 245, 0.4);
-      max-width: 500px;
-      width: 100%;
       justify-content: space-around;
-      margin-bottom: 2rem;
+      gap: 2rem;
     }
     .wind-info {
-      font-size: 1.25rem;
-      user-select: none;
-      color: #cfd8dc;
+      font-size: 1.3rem;
     }
     .wind-info strong {
-      font-weight: 600;
-      color: #90caf9;
       display: inline-block;
       min-width: 140px;
+      color: #ff7f50;
+      text-shadow: 0 0 5px #ff7f50aa;
     }
     .wind-arrow {
-      width: 90px;
-      height: 90px;
-      transition: transform 0.5s ease;
+      width: 100px;
+      height: 100px;
       user-select: none;
-      filter: drop-shadow(0 0 4px rgba(66, 165, 245, 0.7));
+      filter: drop-shadow(0 0 6px #05ff00aa);
+      transition: transform 0.5s ease;
+      position: relative;
+    }
+    .wind-arrow circle {
+      stroke: #05ff00;
+      stroke-width: 2;
+      fill: none;
+    }
+    .wind-arrow polygon {
+      fill: #05ff00;
+      filter: drop-shadow(0 0 10px #00ff00);
+    }
+    .radar-sweep {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(0,255,0,0.15) 0%, transparent 60%);
+      animation: sweep 4s linear infinite;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      transform-origin: center;
+      z-index: 1;
+    }
+    @keyframes sweep {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
     .timestamp {
-      margin-top: 1.5rem;
-      font-size: 0.95rem;
-      color: #90a4ae;
-      user-select: none;
-    }
-    .webcams {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      max-width: 900px;
-      width: 100%;
-    }
-    .webcam {
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-      overflow: hidden;
-      flex: 1 1 300px;
-      max-width: 320px;
-    }
-    .webcam iframe {
-      width: 100%;
-      height: 180px;
-      border: none;
-      display: block;
-    }
-    @media (max-width: 600px) {
-      .wind-container {
-        flex-direction: column;
-        padding: 1.5rem;
-      }
-      .wind-info strong {
-        min-width: auto;
-        display: block;
-        margin-bottom: 0.3rem;
-      }
-      .webcams {
-        flex-direction: column;
-        gap: 1rem;
-      }
-      .webcam {
-        max-width: 100%;
-      }
+      margin-top: 1.8rem;
+      font-size: 1rem;
+      color: #7aff7a;
+      text-shadow: 0 0 5px #007700;
     }
   </style>
 </head>
 <body>
-  <h1>ENGK Winds & Webcams</h1>
+  <h1>ENGK WINDS</h1>
+
   <div class="wind-container">
-    <svg class="wind-arrow" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <polygon points="32,0 40,16 35,16 35,56 29,56 29,16 24,16" fill="#42a5f5"/>
-      <circle cx="32" cy="32" r="30" stroke="#42a5f5" stroke-width="2" fill="none"/>
-    </svg>
+    <div class="wind-arrow" aria-hidden="true" role="presentation">
+      <svg viewBox="0 0 64 64" width="100" height="100" xmlns="http://www.w3.org/2000/svg" style="position: relative; z-index: 2;">
+        <circle cx="32" cy="32" r="30" />
+        <polygon points="32,6 38,26 32,20 26,26" />
+      </svg>
+      <div class="radar-sweep"></div>
+    </div>
     <div>
-      <div class="wind-info"><strong>Wind speed:</strong><span id="wind-speed">--</span> m/s</div>
-      <div class="wind-info"><strong>Wind gust:</strong><span id="wind-gust">--</span> m/s</div>
-      <div class="wind-info"><strong>Wind direction:</strong><span id="wind-direction">--</span>°</div>
+      <div class="wind-info"><strong>Wind speed:</strong> <span id="wind-speed">--</span> m/s</div>
+      <div class="wind-info"><strong>Wind gust:</strong> <span id="wind-gust">--</span> m/s</div>
+      <div class="wind-info"><strong>Wind direction:</strong> <span id="wind-direction">--</span>°</div>
     </div>
   </div>
+
   <div class="timestamp" id="timestamp">Last updated: --:--:--</div>
 
-  <div class="webcams">
-    <div class="webcam">
-      <iframe src="https://kamera.gullknapp.no/embed/1" title="Webcam 1 ENGK" allowfullscreen></iframe>
-    </div>
-    <div class="webcam">
-      <iframe src="https://kamera.gullknapp.no/embed/2" title="Webcam 2 ENGK" allowfullscreen></iframe>
-    </div>
-  </div>
+<script>
+  function updateWind(speed, gust, direction, time) {
+    document.getElementById('wind-speed').textContent = speed;
+    document.getElementById('wind-gust').textContent = gust;
+    document.getElementById('wind-direction').textContent = direction;
+    document.getElementById('timestamp').textContent = 'Last updated: ' + time;
 
-  <script>
-    function updateWind(speed, gust, direction, time) {
-      document.getElementById('wind-speed').textContent = speed;
-      document.getElementById('wind-gust').textContent = gust;
-      document.getElementById('wind-direction').textContent = direction;
-      document.getElementById('timestamp').textContent = 'Last updated: ' + time;
-
-      const arrow = document.querySelector('.wind-arrow');
-      arrow.style.transform = `rotate(${direction}deg)`;
-    }
-
-    // Demo update - replace with real data fetching later
-    function demoUpdate() {
-      const now = new Date().toLocaleTimeString();
-      updateWind(5.3, 8.7, 210, now);
-    }
-
-    demoUpdate();
-  </script>
+    const arrow = document.querySelector('.wind-arrow svg');
+    arrow.style.transform = `rotate(${direction}deg)`;
+  }
+  // Demo with placeholder data
+  function demoUpdate() {
+    const now = new Date().toLocaleTimeString();
+    updateWind(7.4, 12.3, 275, now);
+  }
+  demoUpdate();
+</script>
 </body>
 </html>
