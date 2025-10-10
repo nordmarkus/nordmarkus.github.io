@@ -1,37 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Wind Data - Arendal Lufthavn</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Arendal Lufthavn Wind Data</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #eaf0fa; color: #222; max-width: 480px; margin:auto; padding: 2em;}
-    h1 { font-size: 1.5em; }
-    table { border-collapse: collapse; width: 100%; margin-top: 1em;}
-    th, td { border: 1px solid #bbb; padding: 0.5em; text-align: center;}
-    th { background: #d0e6fc;}
-    .small { font-size: 0.85em; color: #555;}
+    body { font-family: Arial, sans-serif; margin: 2em; background: #fafbfc; color: #222; }
+    h2 { color: #1762A7; }
+    #wind-data { margin-top: 2em; }
+    .label { font-weight: bold; }
   </style>
 </head>
 <body>
-  <h1>Arendal Lufthavn Weather Station</h1>
-  <p>Last updated: 10 October 2025, 10:30 CEST</p>
-  <table>
-    <tr>
-      <th>Time</th>
-      <th>Wind Speed (m/s)</th>
-      <th>Gust (m/s)</th>
-      <th>Direction</th>
-    </tr>
-    <tr>
-      <td>10:30</td>
-      <td>3.4</td>
-      <td>4.6</td>
-      <td>SV (215°)</td>
-    </tr>
-  </table>
-  <p class="small">
-    Source: <a href="https://vindnå.no/vindstyrke/agder/froland/arendal-lufthavn-c95936">vindnå.no</a> | Built for GitHub Pages
-  </p>
+  <h2>Wind Data – Arendal Lufthavn</h2>
+  <div id="wind-data">
+    <p>Fetching...</p>
+  </div>
+  <script>
+    async function fetchWind() {
+      const lat = 58.594;
+      const lon = 8.074;
+      const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`;
+
+      try {
+        const response = await fetch(url, {
+          headers: { 'User-Agent': 'WindDataDemo/1.0 https://github.com/' }
+        });
+        const data = await response.json();
+        const instant = data.properties.timeseries[0].data.instant.details;
+        const gust = data.properties.timeseries[0].data.next_1_hours?.details?.wind_speed_of_gust || 'N/A';
+        document.getElementById('wind-data').innerHTML =
+          `<div><span class="label">Wind speed:</span> ${instant.wind_speed} m/s</div>
+           <div><span class="label">Wind gust:</span> ${gust} m/s</div>
+           <div><span class="label">Wind direction:</span> ${instant.wind_from_direction}&deg;</div>
+           <div>Last updated: <span id="update-time">${new Date().toLocaleTimeString()}</span></div>`;
+      } catch (e) {
+        document.getElementById('wind-data').innerHTML = "<p>Error fetching wind data.</p>";
+      }
+    }
+    fetchWind();
+    setInterval(fetchWind, 60000); // Update every 60 seconds (60000 ms)
+  </script>
 </body>
 </html>
