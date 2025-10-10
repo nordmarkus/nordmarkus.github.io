@@ -2,64 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Frost API Wind Data SN36330 with CORS Proxy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ENGK Winds</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2em; background: #fafbfc; color: #222; }
-    h2 { color: #1762A7; }
-    #wind-data { margin-top: 2em; }
-    .label { font-weight: bold; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      color: #333;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #0078d7;
+      user-select: none;
+    }
+    .wind-container {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      background: white;
+      padding: 2rem 3rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      max-width: 420px;
+      width: 100%;
+      justify-content: space-around;
+    }
+    .wind-info {
+      font-size: 1.25rem;
+      user-select: none;
+    }
+    .wind-info strong {
+      font-weight: 600;
+      color: #005a9e;
+      display: inline-block;
+      min-width: 130px;
+    }
+    .wind-arrow {
+      width: 80px;
+      height: 80px;
+      transition: transform 0.5s ease;
+      user-select: none;
+      filter: drop-shadow(0 0 2px rgba(0,0,0,0.15));
+    }
+    .timestamp {
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      color: #555;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
-  <h2>Wind Data – SN36330 Arendal Lufthavn (Frost API + CORS Proxy)</h2>
-  <div id="wind-data"><p>Fetching...</p></div>
+  <h1>ENGK Winds</h1>
+  <div class="wind-container">
+    <svg class="wind-arrow" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <polygon points="32,0 40,16 35,16 35,56 29,56 29,16 24,16" fill="#0078d7"/>
+      <circle cx="32" cy="32" r="30" stroke="#0078d7" stroke-width="2" fill="none"/>
+    </svg>
+    <div>
+      <div class="wind-info"><strong>Wind speed:</strong><span id="wind-speed">--</span> m/s</div>
+      <div class="wind-info"><strong>Wind gust:</strong><span id="wind-gust">--</span> m/s</div>
+      <div class="wind-info"><strong>Wind direction:</strong><span id="wind-direction">--</span>°</div>
+    </div>
+  </div>
+  <div class="timestamp" id="timestamp">Last updated: --:--:--</div>
+
   <script>
-    const clientId = 'ed077068-5080-4a01-9fc8-dced14d78b4e';
-    const clientSecret = '9f954f85-9705-4a15-879b-a3ac2a526d2b';
-    const basicAuth = btoa(`${clientId}:${clientSecret}`);
+    // Example function to update wind info and arrow rotation
+    // Replace with real data integration later
+    function updateWind(speed, gust, direction, time) {
+      document.getElementById('wind-speed').textContent = speed;
+      document.getElementById('wind-gust').textContent = gust;
+      document.getElementById('wind-direction').textContent = direction;
+      document.getElementById('timestamp').textContent = 'Last updated: ' + time;
 
-    async function fetchWind() {
-      const corsProxy = 'https://cors-anywhere.herokuapp.com/';
-      const apiUrl = 'https://frost.met.no/observations/v0.jsonld?sources=SN36330&elements=wind_speed,wind_from_direction,wind_speed_of_gust&referencetime=latest';
-      const url = corsProxy + apiUrl;
-
-      try {
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': 'Basic ' + basicAuth,
-            'Accept': 'application/json'
-          }
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-        const data = await response.json();
-        const observations = data.data || [];
-        const obsMap = {};
-        for (const obs of observations) {
-          if (obs.elementId && obs.value !== undefined) {
-            obsMap[obs.elementId] = obs.value;
-          }
-        }
-
-        const windSpeed = obsMap['wind_speed'] ?? 'N/A';
-        const windGust = obsMap['wind_speed_of_gust'] ?? 'N/A';
-        const windDirection = obsMap['wind_from_direction'] ?? 'N/A';
-
-        document.getElementById('wind-data').innerHTML =
-          `<div><span class="label">Wind speed:</span> ${windSpeed} m/s</div>
-           <div><span class="label">Wind gust:</span> ${windGust} m/s</div>
-           <div><span class="label">Wind direction:</span> ${windDirection}&deg;</div>
-           <div>Last updated: <span>${new Date().toLocaleTimeString()}</span></div>`;
-
-      } catch (error) {
-        document.getElementById('wind-data').innerHTML = `<p>Error fetching wind data: ${error.message}</p>`;
-      }
+      const arrow = document.querySelector('.wind-arrow');
+      // Rotate arrow to point in wind direction (0° = north)
+      arrow.style.transform = `rotate(${direction}deg)`;
     }
 
-    fetchWind();
-    setInterval(fetchWind, 60000);
+    // Demo update with dummy data and current time
+    function demoUpdate() {
+      const now = new Date().toLocaleTimeString();
+      updateWind(6.5, 10.1, 135, now);
+    }
+
+    demoUpdate();
   </script>
 </body>
 </html>
