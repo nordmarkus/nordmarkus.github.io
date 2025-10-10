@@ -33,14 +33,19 @@
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
+        const csvText = await response.text();
+        const lines = csvText.trim().split('\n');
 
-        // Data format: array of objects sorted latest last, so get last element for latest
-        const latest = data[data.length - 1];
+        const headers = lines[0].split(',');
+        const lastLine = lines[lines.length - 1].split(',');
 
-        const windSpeed = latest.wind_speed;
-        const windGust = latest.max_wind_speed_of_gust_PT10M || 'N/A';
-        const windDirection = latest.wind_from_direction;
+        const windDirIdx = headers.indexOf('wind_from_direction');
+        const windSpeedIdx = headers.indexOf('wind_speed');
+        const windGustIdx = headers.indexOf('max_wind_speed_of_gust_PT10M');
+
+        const windDirection = windDirIdx !== -1 ? lastLine[windDirIdx] : 'N/A';
+        const windSpeed = windSpeedIdx !== -1 ? lastLine[windSpeedIdx] : 'N/A';
+        const windGust = windGustIdx !== -1 ? lastLine[windGustIdx] : 'N/A';
 
         document.getElementById('wind-data').innerHTML =
           `<div><span class="label">Wind speed:</span> ${windSpeed} m/s</div>
@@ -53,7 +58,7 @@
     }
 
     fetchWind();
-    setInterval(fetchWind, 60000); // Update every 60 seconds
+    setInterval(fetchWind, 60000);
   </script>
 </body>
 </html>
