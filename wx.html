@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Arendal Lufthavn Wind Data</title>
+  <title>Wind Data SN36330 - Arendal Lufthavn</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2em; background: #fafbfc; color: #222; }
     h2 { color: #1762A7; }
@@ -12,18 +12,14 @@
   </style>
 </head>
 <body>
-  <h2>Wind Data – Arendal Lufthavn</h2>
+  <h2>Wind Data – SN36330 Arendal Lufthavn</h2>
   <div id="wind-data">
     <p>Fetching...</p>
   </div>
   <script>
     async function fetchWind() {
-      const lat = 58.594;
-      const lon = 8.074;
-      const apiUrl = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${lat}&lon=${lon}`;
-
-      // Use CORS Anywhere proxy to avoid CORS issues
       const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+      const apiUrl = 'https://seklima.met.no/minutes/wind_from_direction,wind_speed,max(wind_speed_of_gust%20PT10M)/last_hour/SN36330/nb/';
       const url = proxyUrl + apiUrl;
 
       try {
@@ -38,13 +34,18 @@
         }
 
         const data = await response.json();
-        const instant = data.properties.timeseries[0].data.instant.details;
-        const gust = data.properties.timeseries[0].data.next_1_hours?.details?.wind_speed_of_gust || 'N/A';
+
+        // Data format: array of objects sorted latest last, so get last element for latest
+        const latest = data[data.length - 1];
+
+        const windSpeed = latest.wind_speed;
+        const windGust = latest.max_wind_speed_of_gust_PT10M || 'N/A';
+        const windDirection = latest.wind_from_direction;
 
         document.getElementById('wind-data').innerHTML =
-          `<div><span class="label">Wind speed:</span> ${instant.wind_speed} m/s</div>
-           <div><span class="label">Wind gust:</span> ${gust} m/s</div>
-           <div><span class="label">Wind direction:</span> ${instant.wind_from_direction}&deg;</div>
+          `<div><span class="label">Wind speed:</span> ${windSpeed} m/s</div>
+           <div><span class="label">Wind gust:</span> ${windGust} m/s</div>
+           <div><span class="label">Wind direction:</span> ${windDirection}&deg;</div>
            <div>Last updated: <span id="update-time">${new Date().toLocaleTimeString()}</span></div>`;
       } catch (error) {
         document.getElementById('wind-data').innerHTML = `<p>Error fetching wind data: ${error.message}</p>`;
