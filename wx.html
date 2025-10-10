@@ -37,11 +37,18 @@
         const lines = csvText.trim().split('\n');
 
         const headers = lines[0].split(',');
+        console.log('CSV Headers:', headers);  // Check the exact header names here
+
         const lastLine = lines[lines.length - 1].split(',');
 
-        const windDirIdx = headers.indexOf('wind_from_direction');
-        const windSpeedIdx = headers.indexOf('wind_speed');
-        const windGustIdx = headers.indexOf('max_wind_speed_of_gust_PT10M');
+        // Update these once you confirm header names from the console output
+        const windDirHeader = 'wind_from_direction';
+        const windSpeedHeader = 'wind_speed';
+        const windGustHeader = 'max_wind_speed_of_gust_PT10M';
+
+        const windDirIdx = headers.indexOf(windDirHeader);
+        const windSpeedIdx = headers.indexOf(windSpeedHeader);
+        const windGustIdx = headers.indexOf(windGustHeader);
 
         const windDirection = windDirIdx !== -1 ? lastLine[windDirIdx] : 'N/A';
         const windSpeed = windSpeedIdx !== -1 ? lastLine[windSpeedIdx] : 'N/A';
@@ -52,13 +59,14 @@
            <div><span class="label">Wind gust:</span> ${windGust} m/s</div>
            <div><span class="label">Wind direction:</span> ${windDirection}&deg;</div>
            <div>Last updated: <span id="update-time">${new Date().toLocaleTimeString()}</span></div>`;
+
       } catch (error) {
         document.getElementById('wind-data').innerHTML = `<p>Error fetching wind data: ${error.message}</p>`;
       }
     }
 
     fetchWind();
-    setInterval(fetchWind, 60000);
+    setInterval(fetchWind, 60000); // Refresh every 60 seconds
   </script>
 </body>
 </html>
