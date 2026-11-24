@@ -10,7 +10,7 @@ This is a personal, offline-capable moving-map web app built from `M517-AIR_Shee
 4. Safari: **Share → Add to Home Screen → Add**.
 5. Open the new icon, press **Locate**, and allow Location and Motion & Orientation access.
 
-The red aircraft symbol follows the iPad’s GPS location. Its direction uses GPS course when moving (best in flight) and the iPad compass as a fallback. Pinch to zoom and drag to pan; tap Locate to re-centre.
+The red aircraft symbol follows the iPad’s GPS location and points only by its GPS-derived track while moving. The compact panel shows GPS track, speed in knots, altitude in feet, and GPS accuracy. A red breadcrumb marks the recent track; **Clear trail** resets it. Pinch to zoom and drag to pan; tap Locate to re-centre.
 
 ## Notes
 
