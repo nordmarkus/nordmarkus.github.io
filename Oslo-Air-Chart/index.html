@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#102238">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="stylesheet" href="style.css">
+  <title>Oslo Air Chart</title>
+</head>
+<body>
+  <canvas id="chart" aria-label="Moving map"></canvas>
+  <aside id="panel">
+    <strong>Oslo Air Chart</strong>
+    <span id="status">Tap Locate to begin</span>
+    <button id="locate">Locate</button>
+  </aside>
+  <div id="notice" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>

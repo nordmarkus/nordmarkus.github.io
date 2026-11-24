@@ -1,0 +1,9 @@
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #102238; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+#chart { width: 100%; height: 100%; touch-action: none; display: block; }
+#panel { position: fixed; z-index: 2; top: max(14px, env(safe-area-inset-top)); left: 14px; padding: 10px 12px; border-radius: 12px; color: #fff; background: rgba(12, 27, 43, .88); box-shadow: 0 2px 12px #0006; display: grid; gap: 5px; min-width: 172px; }
+#panel strong { font-size: 15px; }
+#status { color: #c5d6e5; font-size: 12px; }
+button { appearance: none; border: 0; border-radius: 8px; padding: 9px; color: #fff; background: #1768a6; font-weight: 650; font-size: 15px; }
+button:active { background: #0e507f; }
+#notice { position: fixed; left: 50%; bottom: max(22px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: 85%; padding: 10px 14px; color: #fff; background: #962d25; border-radius: 9px; font-size: 13px; text-align: center; }
